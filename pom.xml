@@ -81,6 +81,13 @@
     </repository>
   </repositories>
 
+  <distributionManagement>
+    <site>
+      <id>docs-site</id>
+      <url>file://${project.build.directory}/staging</url>
+    </site>
+  </distributionManagement>
+
   <build>
     <plugins>
       <plugin>
@@ -115,6 +122,19 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
         <version>${org.eclipse.jetty.jetty-maven-plugin.version}</version>
+      </plugin>
+
+      <!-- Added for Practice 6: maven site and reports -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId> 
+        <version>3.12.1</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>3.4.1</version>
       </plugin>
     </plugins>
   </build>
