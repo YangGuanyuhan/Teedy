@@ -60,6 +60,7 @@
     <org.apache.maven.plugins.maven-jar-plugin.version>3.3.0</org.apache.maven.plugins.maven-jar-plugin.version>
     <org.apache.maven.plugins.maven-war-plugin.version>3.3.2</org.apache.maven.plugins.maven-war-plugin.version>
     <org.apache.maven.plugins.maven-surefire-plugin.version>3.0.0</org.apache.maven.plugins.maven-surefire-plugin.version>
+    <org.apache.maven.plugins.maven-pmd-plugin.version>3.25.0</org.apache.maven.plugins.maven-pmd-plugin.version>
     <org.eclipse.jetty.jetty-maven-plugin.version>11.0.20</org.eclipse.jetty.jetty-maven-plugin.version>
   </properties>
 
@@ -136,8 +137,43 @@
         <artifactId>maven-project-info-reports-plugin</artifactId>
         <version>3.4.1</version>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>${org.apache.maven.plugins.maven-pmd-plugin.version}</version>
+        <configuration>
+          <rulesets>
+            <ruleset>${maven.multiModuleProjectDirectory}/pmd-ruleset.xml</ruleset>
+          </rulesets>
+          <failOnViolation>false</failOnViolation>
+          <printFailingErrors>true</printFailingErrors>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>${org.apache.maven.plugins.maven-pmd-plugin.version}</version>
+        <configuration>
+          <rulesets>
+            <ruleset>${maven.multiModuleProjectDirectory}/pmd-ruleset.xml</ruleset>
+          </rulesets>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
 
   <modules>
     <module>docs-core</module>
