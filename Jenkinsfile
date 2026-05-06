@@ -1,7 +1,5 @@
 pipeline {
 agent any
-
-```
 stages {
     stage('Clean') {
         steps {
@@ -60,6 +58,4 @@ post {
         junit '**/target/surefire-reports/*.xml'
     }
 }
-```
-
 }
