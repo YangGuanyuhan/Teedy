@@ -5,7 +5,6 @@ pipeline {
         DOCKER_HUB_CREDENTIALS = credentials('dockerhub_credentials')
         DOCKER_IMAGE = 'chr1sty/teedy-app'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
-        REGISTRY = 'https://registry.hub.docker.com'
     }
     
     stages {
@@ -37,9 +36,6 @@ pipeline {
         }
         
         stage('Building image') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
                     // assume Dockerfile locate at root 
@@ -49,12 +45,9 @@ pipeline {
         }
         
         stage('Upload image') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
-                    docker.withRegistry("${REGISTRY}", 'DOCKER_HUB_CREDENTIALS') {
+                    docker.withRegistry('', 'dockerhub_credentials') {
                         docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push()
                         docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push('latest')
                     }
@@ -63,9 +56,6 @@ pipeline {
         }
         
         stage('Run containers') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
                     // stop then remove containers if exists
