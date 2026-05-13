@@ -1,61 +1,95 @@
 pipeline {
-agent any
-stages {
-    stage('Clean') {
-        steps {
-            sh 'mvn clean'
+    agent any
+    
+    environment {
+        DOCKER_HUB_CREDENTIALS = credentials('dockerhub_credentials')
+        DOCKER_IMAGE = 'chr1sty/teedy-app'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        REGISTRY = 'https://registry.hub.docker.com'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scmGit(
+                    branches: [[name: '*/master']], 
+                    userRemoteConfigs: [[url: 'https://github.com/YangGuanyuhan/Teedy.git']]
+                )
+            }
+        }
+        
+        stage('Build & Package') {
+            steps {
+                sh 'mvn clean -DskipTests package'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                sh 'mvn test -Dmaven.test.failure.ignore=true'
+            }
+        }
+        
+        stage('Code Quality') {
+            steps {
+                sh 'mvn pmd:pmd jacoco:report'
+            }
+        }
+        
+        stage('Building image') {
+            when {
+                branch 'master'
+            }
+            steps {
+                script {
+                    // assume Dockerfile locate at root 
+                    docker.build("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}")
+                }
+            }
+        }
+        
+        stage('Upload image') {
+            when {
+                branch 'master'
+            }
+            steps {
+                script {
+                    docker.withRegistry("${REGISTRY}", 'DOCKER_HUB_CREDENTIALS') {
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push()
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push('latest')
+                    }
+                }
+            }
+        }
+        
+        stage('Run containers') {
+            when {
+                branch 'master'
+            }
+            steps {
+                script {
+                    // stop then remove containers if exists
+                    sh 'docker stop teedy-container-8081 || true'
+                    sh 'docker rm teedy-container-8081 || true'
+                    
+                    // run Container
+                    docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").run('--name teedy-container-8081 -d -p 8081:8080')
+                    
+                    // Optional: list all teedy-containers
+                    sh 'docker ps --filter "name=teedy-container"'
+                }
+            }
         }
     }
-
-    stage('Compile') {
-        steps {
-            sh 'mvn compile'
+    
+    post {
+        always {
+            archiveArtifacts artifacts: '**/target/**/*.war', fingerprint: true
+            junit '**/target/surefire-reports/*.xml', allowEmptyResults: true
         }
-    }
-
-    stage('Test') {
-        steps {
-            sh 'mvn test -Dmaven.test.failure.ignore=true'
-        }
-    }
-
-    stage('PMD') {
-        steps {
-            sh 'mvn pmd:pmd'
-        }
-    }
-
-    stage('JaCoCo') {
-        steps {
-            sh 'mvn jacoco:report'
-        }
-    }
-
-    stage('Javadoc') {
-        steps {
-            sh 'mvn javadoc:javadoc'
-        }
-    }
-
-    stage('Site') {
-        steps {
-            sh 'mvn site'
-        }
-    }
-
-    stage('Package') {
-        steps {
-            sh 'mvn package -DskipTests'
+        failure {
+            echo 'Pipeline failed! Check logs above.'
         }
     }
 }
 
-post {
-    always {
-        archiveArtifacts artifacts: '**/target/site/**/*.*', fingerprint: true
-        archiveArtifacts artifacts: '**/target/**/*.jar', fingerprint: true
-        archiveArtifacts artifacts: '**/target/**/*.war', fingerprint: true
-        junit '**/target/surefire-reports/*.xml'
-    }
-}
-}
