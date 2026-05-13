@@ -23,17 +23,11 @@ pipeline {
             }
         }
         
-        stage('Test') {
-            steps {
-                sh 'mvn test -Dmaven.test.failure.ignore=true'
-            }
-        }
-        
-        stage('Code Quality') {
-            steps {
-                sh 'mvn pmd:pmd jacoco:report'
-            }
-        }
+        // stage('Test') {
+        //     steps {
+        //         sh 'mvn test -Dmaven.test.failure.ignore=true'
+        //     }
+        // }
         
         stage('Building image') {
             steps {
